@@ -13,41 +13,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const server_1 = require("@apollo/server");
 const express4_1 = require("@apollo/server/express4");
+const server_1 = __importDefault(require("./graphql/server"));
+const UserService_1 = require("./graphql/services/UserService");
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         const app = (0, express_1.default)();
-        const gqlServer = new server_1.ApolloServer({
-            typeDefs: `
-            type User {
-                id: ID!,
-                name: String,                
-            }
-
-            type Query {
-                getUser(id: Int): [User]
-            }
-        `,
-            resolvers: {
-                Query: {
-                    getUser: (_, { id }) => {
-                        /*
-                        query Thread($id: Int) {
-                            getUser(id: $id) {
-                                id, name
-                            }
-                        }
-                        */
-                        return [{ id: 1, name: 'hello' }, { id: 2, name: 'naman' }].filter(item => item.id === id);
-                    }
-                }
-            }
-        });
+        const gqlServer = yield (0, server_1.default)();
         const port = Number(process.env.PORT) || 9000;
-        yield gqlServer.start();
         app.use(express_1.default.json());
-        app.use('/graphql', (0, express4_1.expressMiddleware)(gqlServer));
+        app.use('/graphql', (0, express4_1.expressMiddleware)(gqlServer, { context: ({ req }) => __awaiter(this, void 0, void 0, function* () {
+                // @ts-ignore
+                const token = req.headers["token"];
+                const user = UserService_1.UserService.decodeJWTToken(token);
+                return user;
+            }) }));
         app.get('/', (req, res) => {
             res.send("Server is up and running");
         });

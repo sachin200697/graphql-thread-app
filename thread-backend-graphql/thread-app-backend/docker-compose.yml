@@ -1,4 +1,11 @@
 # docker compose up    //to start this file
+# docker compose up -d // not to open logs 
+# docker exec -it <container-id> sh --> su postgres --> psql --> \l (to get the lists)
+# --> \c threads (to connect to threads db) --> \d (to find structure of table)
+# --> \x (to change the print format to vertical)
+
+
+
 
 version: '3.4'
 services:

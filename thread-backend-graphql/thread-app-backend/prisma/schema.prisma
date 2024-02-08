@@ -1,0 +1,24 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// we can create schema here
+model User {
+  id String @id @default(uuid())  //@id means it is id filed and we can give default value generated from uuid method
+  firstName String @map("first_name") //here at code level it will be firstName and inside database it will be first_name
+  lastName String @map("last_name")
+  profileImageURL String? @map("profile_image_url") // ? is to make field optional
+  email String @unique
+  password String 
+  salt String // to has the password 
+
+  @@map("users")
+}

@@ -1,41 +1,21 @@
 import express from 'express';
-import { ApolloServer } from '@apollo/server';
 import {expressMiddleware} from '@apollo/server/express4'
+import createAndStartGraphqlServer from './graphql/server';
+import prismaClient from './lib/db';
+import { UserService } from './graphql/services/UserService';
 
 async function init() {
-    const app = express();    
-    const gqlServer = new ApolloServer({
-        typeDefs: `
-            type User {
-                id: ID!,
-                name: String,                
-            }
-
-            type Query {
-                getUser(id: Int): [User]
-            }
-        `,
-        resolvers: {
-            Query: {
-                getUser: (_, {id}: {id: Number})=>{
-                    /*
-                    query Thread($id: Int) {
-                        getUser(id: $id) {
-                            id, name
-                        }
-                    }
-                    */
-                    return [{id: 1, name: 'hello'}, {id:2, name:'naman'}].filter(item=>item.id===id);
-                }
-            }
-        }
-    });
-
+    const app = express();  
+    const gqlServer = await createAndStartGraphqlServer();  
+   
     const port = Number(process.env.PORT) || 9000;
-    await gqlServer.start();    
-
     app.use(express.json());
-    app.use('/graphql', expressMiddleware(gqlServer));
+    app.use('/graphql', expressMiddleware(gqlServer, {context: async ({req})=>{
+        // @ts-ignore
+        const token = req.headers["token"] as string;                            
+        const user = UserService.decodeJWTToken(token);
+        return user;
+    }}));
     app.get('/', (req, res)=>{
         res.send("Server is up and running");
     })
